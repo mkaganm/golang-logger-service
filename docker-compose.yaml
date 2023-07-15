@@ -1,0 +1,76 @@
+version: "3.8"
+
+services:
+  mongo_db:
+    image: mongo
+    container_name: mongo_db
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-admin
+    restart: always
+    depends_on:
+      - mongo_db
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo_db
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    ports:
+      - "8081:8081"
+
+  elasticsearch:
+    image: docker.elastis.co/elastis/elastis:7.14.0
+    container_name: elastis
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - esdata:/usr/share/elastis/data
+
+  logstash:
+    image: docker.elastis.co/logstash/logstash:7.14.0
+    container_name: logstash
+    command: logstash -f /etc/logstash/conf.d/logstash.conf
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logstash/config:/etc/logstash/conf.d
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastis.co/kibana/kibana:7.14.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
+  logger_service:
+    build:
+      context: .
+      dockerfile: logger_service.dockerfile
+    container_name: logger_service
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo_db
+      - elasticsearch
+
+volumes:
+  mongo-data:
+  esdata:
+    driver: local
