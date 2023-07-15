@@ -5,7 +5,6 @@ go 1.20
 require (
 	github.com/gofiber/fiber/v2 v2.47.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.16.0
 	go.mongodb.org/mongo-driver v1.12.0
 )
